@@ -1,18 +1,18 @@
 <?php
 
-namespace Spatie\Watcher\Tests;
+namespace Adavalley\Watcher\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
-use Spatie\Watcher\Watch;
+use Adavalley\Watcher\Watch;
 
 class WatchTest extends TestCase
 {
-    protected string $testDirectory;
+    protected $testDirectory;
 
-    protected int $i = 0;
+    protected $i = 0;
 
-    protected array $recordedEvents = [];
+    protected $recordedEvents = [];
 
     public function setUp(): void
     {

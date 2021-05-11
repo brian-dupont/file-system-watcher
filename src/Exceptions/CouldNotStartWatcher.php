@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\Watcher\Exceptions;
+namespace Adavalley\Watcher\Exceptions;
 
 use Exception;
 use Symfony\Component\Process\Process;

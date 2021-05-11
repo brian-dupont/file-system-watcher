@@ -1,9 +1,9 @@
 <?php
 
-namespace Spatie\Watcher;
+namespace Adavalley\Watcher;
 
 use Closure;
-use Spatie\Watcher\Exceptions\CouldNotStartWatcher;
+use Adavalley\Watcher\Exceptions\CouldNotStartWatcher;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 
@@ -15,27 +15,27 @@ class Watch
     const EVENT_TYPE_DIRECTORY_CREATED = 'directoryCreated';
     const EVENT_TYPE_DIRECTORY_DELETED = 'directoryDeleted';
 
-    protected array $paths = [];
+    protected $paths = [];
 
     /** @var callable[] */
-    protected array $onFileCreated = [];
+    protected $onFileCreated = [];
 
     /** @var callable[] */
-    protected array $onFileUpdated = [];
+    protected $onFileUpdated = [];
 
     /** @var callable[] */
-    protected array $onFileDeleted = [];
+    protected $onFileDeleted = [];
 
     /** @var callable[] */
-    protected array $onDirectoryCreated = [];
+    protected $onDirectoryCreated = [];
 
     /** @var callable[] */
-    protected array $onDirectoryDeleted = [];
+    protected $onDirectoryDeleted = [];
 
     /** @var callable[] */
-    protected array $onAny = [];
+    protected $onAny = [];
 
-    protected Closure $shouldContinue;
+    protected $shouldContinue;
 
     public static function path(string $path): self
     {
@@ -49,10 +49,12 @@ class Watch
 
     public function __construct()
     {
-        $this->shouldContinue = fn () => true;
+        $this->shouldContinue = function () {
+            return true;
+        };
     }
 
-    public function setPaths(string | array $paths): self
+    public function setPaths($paths): self
     {
         if (is_string($paths)) {
             $paths = func_get_args();
@@ -142,9 +144,11 @@ class Watch
         ];
 
         $process = new Process(
-            command: $command,
-            cwd: realpath(__DIR__ . '/../bin'),
-            timeout: null,
+            $command,
+            realpath(__DIR__ . '/../bin'),
+            null,
+            null,
+            null,
         );
 
         $process->start();
@@ -163,13 +167,30 @@ class Watch
 
             $path = trim($path);
 
-            match ($type) {
-                static::EVENT_TYPE_FILE_CREATED => $this->callAll($this->onFileCreated, $path),
-                static::EVENT_TYPE_FILE_UPDATED => $this->callAll($this->onFileUpdated, $path),
-                static::EVENT_TYPE_FILE_DELETED => $this->callAll($this->onFileDeleted, $path),
-                static::EVENT_TYPE_DIRECTORY_CREATED => $this->callAll($this->onDirectoryCreated, $path),
-                static::EVENT_TYPE_DIRECTORY_DELETED => $this->callAll($this->onDirectoryDeleted, $path),
-            };
+            switch ($type) {
+                case static::EVENT_TYPE_FILE_CREATED:
+                    $this->callAll($this->onFileCreated, $path);
+                    break;
+                
+                case static::EVENT_TYPE_FILE_UPDATED: 
+                    $this->callAll($this->onFileUpdated, $path);
+                    break;
+                
+                case static::EVENT_TYPE_FILE_DELETED: 
+                    $this->callAll($this->onFileDeleted, $path);
+                    break;
+
+                case static::EVENT_TYPE_DIRECTORY_CREATED: 
+                    $this->callAll($this->onDirectoryCreated, $path);
+                    break;
+
+                case static::EVENT_TYPE_DIRECTORY_DELETED: 
+                    $this->callAll($this->onDirectoryDeleted, $path);
+                    break;
+                
+                default: 
+                    break;
+            }
 
             foreach ($this->onAny as $onAnyCallable) {
                 $onAnyCallable($type, $path);
